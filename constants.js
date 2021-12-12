@@ -3,7 +3,7 @@ const ROWS = 20;
 const BLOCK_SIZE = 30;
 const NO_OF_HIGH_SCORES = 10;
 const HIGH_SCORES = 'highScores';
-const COLORS = ['cyan', 'blue', 'orange', 'yellow', 'green', 'purple', 'red'];
+const COLORS = ['cyan', 'blue', 'orange', '#FFD900', 'green', 'purple', 'red'];
 const SHAPES = [
     [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
     [[2, 0, 0], [2, 2, 2], [0, 0, 0]],

@@ -26,12 +26,13 @@ class Board {
             }  
         }
    
-        // Reverse the order of the columns.  
+        // Reverse the order of the columns
         p.shape.forEach(row => row.reverse());
    
         return p;  
     }
     
+    // Checks if new position is valid (no collision detected)
     valid(p) {
         return p.shape.every((row, dy) => {
             return row.every((value, dx) => {
@@ -50,7 +51,7 @@ class Board {
         return (
             x >= 0 && // Left wall
             x < COLS && // Right wall
-            y < ROWS // Bottom wall
+            y < ROWS // Bottom wall/floor
         );
     }
   
@@ -69,7 +70,7 @@ class Board {
         } 
         return true;
     }
-  
+
     setNextPiece() {
         const { width, height } = this.ctxNext.canvas;
         this.nextPiece = new Piece(this.ctxNext);
@@ -83,7 +84,8 @@ class Board {
         this.piece.x = 3;
         this.setNextPiece();
     }
-  
+    
+    // Merge tetromino blocks to the board if no more valid downward moves
     freeze() {  
         this.piece.shape.forEach((row, y) => {  
             row.forEach((value, x) => {  
@@ -93,7 +95,8 @@ class Board {
             });  
         });  
     }
-  
+
+    // Draw board with merged tetromino pieces
     draw() {  
         this.grid.forEach((row, y) => {  
             row.forEach((value, x) => {  
@@ -104,17 +107,19 @@ class Board {
             });  
         });  
     }
-  
+
+    // Count how many lines are cleared at once
     clearLines() {
         let lines = 0;
         this.grid.forEach((row, y) => {
-            // If every value is greater than zero then we have a full row.
+            // If every value is greater than zero then we have a full row
             if (row.every(value => value > 0)) {
                 lines++; // Increase for cleared line
                 
-                this.grid.splice(y, 1); // Remove the row.
+                // Remove the row
+                this.grid.splice(y, 1); 
                 
-                // Add zero filled row at the top.
+                // Add zero filled row at the top
                 this.grid.unshift(Array(COLS).fill(0));
         
                 if (lines > 0) {
@@ -137,7 +142,8 @@ class Board {
             }
         });
     }
-  
+
+    // Define point values depending on number of lines clear at once
     getLineClearPoints(lines) {
         const lineClearPoints =
             lines === 1 ? POINTS.SINGLE : 
@@ -145,7 +151,8 @@ class Board {
             lines === 3 ? POINTS.TRIPLE : 
             lines === 4 ? POINTS.TETRIS : 
             0;
-    
+        
+        // The higher the level the more points awarded
         return (account.level + 1) * lineClearPoints;
     }
 }

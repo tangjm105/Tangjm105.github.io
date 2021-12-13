@@ -1,43 +1,19 @@
-const canvas = document.getElementById('board');
-const ctx = canvas.getContext('2d');
-const canvasNext = document.getElementById('next');  
-const ctxNext = canvasNext.getContext('2d');
- 
-// Calculate size of canvas from constants.
-ctx.canvas.width = COLS * BLOCK_SIZE;
-ctx.canvas.height = ROWS * BLOCK_SIZE;
-
-// Size canvas for four blocks.  
-ctxNext.canvas.width = 4 * BLOCK_SIZE;  
-ctxNext.canvas.height = 4 * BLOCK_SIZE; 
- 
-// Scale blocks
-ctx.scale(BLOCK_SIZE, BLOCK_SIZE); 
-ctxNext.scale(BLOCK_SIZE, BLOCK_SIZE);
-
-
-const KEY = {
-    SPACE: 32, 
-    LEFT: 37,
-    UP: 38,
-    RIGHT: 39,
-    DOWN: 40
-}
-Object.freeze(KEY); 
-
+// Object with current score and cleared lines to keep track of game progress
 let accountValues = {  
     score: 0,
     lines: 0,
     level: 0
 }
- 
+
+// Update game score or lines on screen, key dependant
 function updateAccount(key, value) {  
     let element = document.getElementById(key);  
     if (element) {  
         element.textContent = value;  
     }  
 }
- 
+
+// Proxy object to act on changes to the account object
 let account = new Proxy(accountValues, {  
     set: (target, key, value) => {  
         target[key] = value;  
@@ -46,14 +22,6 @@ let account = new Proxy(accountValues, {
     }  
 });
 
-const moves = {
-    [KEY.LEFT]:  (p) => ({ ...p, x: p.x - 1 }),  
-    [KEY.RIGHT]: (p) => ({ ...p, x: p.x + 1 }),  
-    [KEY.DOWN]:  (p) => ({ ...p, y: p.y + 1 }),
-    [KEY.UP]:    (p) => board.rotate(p),
-    [KEY.SPACE]:  (p) => ({ ...p, y: p.y + 1 }),
-};
-
 let requestId = null;
 let board = null;
 
@@ -61,22 +29,23 @@ drawGrid();
 showHighScores();
 
 function handleKeyPress(event) {
-    // Stop the event from bubbling.  
+    // Stop the event from bubbling
     event.preventDefault();
 
     if (moves[event.keyCode]) {
         // Get new state of piece
         let p = moves[event.keyCode](board.piece);
-
+        
+        // Hard drop
         if (event.keyCode === KEY.SPACE) {
-            // Hard drop
             while (board.valid(p)) {        
                 board.piece.move(p);
                 account.score += POINTS.HARD_DROP;
                 p = moves[KEY.SPACE](board.piece);
             }
         }
-
+        
+        // Soft drop
         if (board.valid(p)) { 
             board.piece.move(p);
             if (event.keyCode === KEY.DOWN) {
@@ -94,12 +63,13 @@ function addEventListener() {
 function draw() {
     const { width, height } = ctx.canvas;
     ctx.clearRect(0, 0, width, height);   
- 
     drawGrid();
+    // Draw board with merged tetromino pieces
     board.draw();
     board.piece.draw();
 }
 
+// Draw light grey grid pattern on board
 function drawGrid() {
     ctx.lineWidth = 1 / BLOCK_SIZE;
     ctx.strokeStyle = '#EFEFEF';
@@ -110,6 +80,7 @@ function drawGrid() {
     }
 }
 
+// Reset game upon finishing a game
 function resetGame() {
     account.score = 0;
     account.lines = 0;
@@ -118,16 +89,20 @@ function resetGame() {
     drawGrid();
     time = { start: performance.now(), elapsed: 0, level: LEVEL[0] };
 }
- 
+
+// Starts new game upon pressing the Play button
 function play() {
     resetGame();
     addEventListener();
 
-    // If we have an old game running then cancel it
+    // If old game instance is running, cancel it
     if (requestId) {
         cancelAnimationFrame(requestId);
     }
+    // Set starting time
     time.start = performance.now();
+
+    // Start animations
     animate();
 }
 
@@ -152,8 +127,11 @@ function animate(now = 0) {
     requestId = requestAnimationFrame(animate);
 }
 
+// Behaviors when game over
 function gameOver() {
+    // Cancel previously scheduled animation frame
     cancelAnimationFrame(requestId);
+
     ctx.fillStyle = 'black';
     ctx.fillRect(1, 3, 8, 1.2);
     ctx.font = '1px Arial';
@@ -164,8 +142,10 @@ function gameOver() {
 }
 
 function checkHighScore(score) {
+    // Parse string retrieved from localStorage
     const highScores = JSON.parse(localStorage.getItem(HIGH_SCORES)) || [];
- 
+
+    // Get lowest score on the list
     const lowestScore = highScores[NO_OF_HIGH_SCORES - 1]?.score ?? 0;
  
     if (score > lowestScore) {
@@ -176,13 +156,17 @@ function checkHighScore(score) {
 
 function saveHighScore(score, highScores) {
     const name = prompt('You got a highscore! Enter name:');
- 
+
+    // Create new score object to save in the list
     const newScore = { score, name };
- 
+
+    // Add to list
     highScores.push(newScore);
+    // Sort the list
     highScores.sort((a, b) => b.score - a.score);
+    // Select new list
     highScores.splice(NO_OF_HIGH_SCORES);
- 
+    // Save to local storage
     localStorage.setItem(HIGH_SCORES, JSON.stringify(highScores));
 };
 
